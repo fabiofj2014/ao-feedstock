@@ -28,7 +28,7 @@ pi
   settings.json
   extensions/gates.ts     tool_result(write|edit) -> fast-gate ; agent_end -> full-gate
   extensions/secrets.ts   block secret-leaking bash ; redact secrets from output
-  extensions/evidence.ts  ao-shaped JSONL emitter
+  lib/evidence.ts         ao-shaped JSONL emitter (helper, not an extension)
   prompts/pr.md           PR prompt (commit convention + checklist)
 gates/
   fast-gates.sh           typecheck + lint (runs only what exists)

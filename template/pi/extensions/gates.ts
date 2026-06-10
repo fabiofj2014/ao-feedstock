@@ -19,7 +19,7 @@ import {
   gateDecision,
   newRunId,
   type CheckResult,
-} from "./evidence.ts";
+} from "../lib/evidence.ts";
 
 const POLICY_ID = "trilho-a-default";
 const WRITE_TOOLS = new Set(["write", "edit", "apply_patch", "multi_edit"]);
