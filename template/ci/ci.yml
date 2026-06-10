@@ -33,14 +33,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   gate:
-    name: Quality gate
+    name: Quality gate (Node)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Detect Node project
+        id: detect
+        run: echo "node=$([ -f package.json ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
+        if: steps.detect.outputs.node == 'true'
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install
+        if: steps.detect.outputs.node == 'true'
         run: |
           if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
             npm ci --ignore-scripts
@@ -48,10 +53,13 @@ jobs:
             npm install --ignore-scripts
           fi
       - name: Typecheck
+        if: steps.detect.outputs.node == 'true'
         run: npm run --silent typecheck --if-present
       - name: Lint
+        if: steps.detect.outputs.node == 'true'
         run: npm run --silent lint --if-present
       - name: Test
+        if: steps.detect.outputs.node == 'true'
         run: npm run --silent test --if-present
       - name: Upload evidence ledger
         if: always()
@@ -60,3 +68,29 @@ jobs:
           name: pi-gate-evidence
           path: evidence/ledger.jsonl
           if-no-files-found: ignore
+
+  gate-python:
+    name: Quality gate (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect Python project
+        id: detect
+        run: echo "py=$([ -f pyproject.toml ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v5
+        if: steps.detect.outputs.py == 'true'
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v5
+        if: steps.detect.outputs.py == 'true'
+      - name: Install
+        if: steps.detect.outputs.py == 'true'
+        run: |
+          if [ -f uv.lock ]; then
+            uv sync --frozen
+          else
+            pip install -e ".[dev]" 2>/dev/null || pip install -e .
+          fi
+      - name: Gate
+        if: steps.detect.outputs.py == 'true'
+        run: bash gates/full-gate.sh

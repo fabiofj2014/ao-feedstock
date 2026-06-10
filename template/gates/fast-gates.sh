@@ -15,8 +15,19 @@ run()  {
   if "$@" >/tmp/pi-fastgate.out 2>&1; then ok "$label"
   else fail "$label"; tail -n 30 /tmp/pi-fastgate.out | sed 's/^/      /' >&2; fi
 }
+# Resolve a Python tool: project venv first, then PATH. Empty if absent.
+pybin() {
+  if [ -x ".venv/bin/$1" ]; then printf '%s' ".venv/bin/$1"
+  else command -v "$1" 2>/dev/null || true; fi
+}
 
 printf '\n▶ fast-gate\n' >&2
+
+# [Python] detected via pyproject.toml (runs alongside other stacks)
+if [ -f pyproject.toml ]; then
+  RUFF="$(pybin ruff)"
+  [ -n "$RUFF" ] && run "ruff" "$RUFF" check .
+fi
 
 if [ -f package.json ]; then
   if npm run 2>/dev/null | grep -q 'gate:fast:project'; then

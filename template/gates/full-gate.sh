@@ -16,8 +16,27 @@ run()  {
   if "$@" >/tmp/pi-fullgate.out 2>&1; then ok "$label"
   else fail "$label"; tail -n 40 /tmp/pi-fullgate.out | sed 's/^/      /' >&2; fi
 }
+# Resolve a Python tool: project venv first, then PATH. Empty if absent.
+pybin() {
+  if [ -x ".venv/bin/$1" ]; then printf '%s' ".venv/bin/$1"
+  else command -v "$1" 2>/dev/null || true; fi
+}
 
 printf '\n▶ full-gate — suíte obrigatória\n' >&2
+
+# [Python] detected via pyproject.toml (runs alongside other stacks)
+if [ -f pyproject.toml ]; then
+  RUFF="$(pybin ruff)";  MYPY="$(pybin mypy)";  PYTEST="$(pybin pytest)"
+  [ -n "$RUFF" ] && run "ruff" "$RUFF" check .
+  HAS_PY="$(find . -path ./.venv -prune -o -name '*.py' -print -quit 2>/dev/null)"
+  [ -n "$MYPY" ] && [ -n "$HAS_PY" ] && run "mypy" "$MYPY" .
+  if [ -n "$PYTEST" ]; then
+    # exit 5 = no tests collected — not a failure for a fresh project
+    "$PYTEST" -q >/tmp/pi-fullgate.out 2>&1; rc=$?
+    if [ "$rc" -eq 0 ] || [ "$rc" -eq 5 ]; then ok "pytest"
+    else fail "pytest"; tail -n 40 /tmp/pi-fullgate.out | sed 's/^/      /' >&2; fi
+  fi
+fi
 
 if [ -f package.json ]; then
   [ -x node_modules/.bin/tsc ] && [ -f tsconfig.json ] && run "typecheck" node_modules/.bin/tsc --noEmit

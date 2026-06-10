@@ -36,8 +36,23 @@ gates/
 .github/workflows/ci.yml  the gate that actually blocks the PR
 AGENTS.md                 rules for the agent (auto-fix ladder, no secrets, no auto-merge)
 evidence/SCHEMA.md        the JSONL <-> ao EDN contract
-package.json              + scripts gate:fast / gate:full
+package.json              + scripts gate:fast / gate:full (Node/hybrid projects)
 ```
+
+## Supported stacks
+
+Auto-detected by the gate scripts — only tools that actually exist run:
+
+| Stack  | Detected by      | fast-gate            | full-gate                     |
+|--------|------------------|----------------------|-------------------------------|
+| Node   | `package.json`   | tsc, `lint` script   | tsc, lint, test, coverage     |
+| Python | `pyproject.toml` | ruff                 | ruff, mypy, pytest            |
+| PHP    | `composer.json`  | pint                 | pint, phpstan, pest           |
+
+Python tools resolve from `.venv/bin/` first, then `PATH`. Hybrid repos
+(e.g. Python backend + Node frontend manifest) run every matching stack.
+Pure Python projects don't get a `package.json` forced on them — the pi
+extension calls the gate scripts via bash directly.
 
 ## The loop
 

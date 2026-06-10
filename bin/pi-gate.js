@@ -65,6 +65,11 @@ function patchPackageJson(target) {
       console.log(`  warn: could not parse ${pkgPath}, leaving it untouched`);
       return;
     }
+  } else if (fs.existsSync(path.join(target, "pyproject.toml"))) {
+    // Pure Python project: gates are invoked directly by the pi extension
+    // (bash gates/*.sh), so don't force a package.json into the repo.
+    console.log(`  package.json   skipped (Python project — gates run via bash directly)`);
+    return;
   } else {
     pkg = { name: path.basename(target), version: "0.0.0", private: true };
   }
