@@ -1,0 +1,28 @@
+{
+  "name": "pi-gate",
+  "version": "0.1.0",
+  "description": "Trilho A: scaffolds the pi coding agent + quality gates + ao-compatible JSONL evidence into a project. npx pi-gate init.",
+  "bin": {
+    "pi-gate": "bin/pi-gate.js"
+  },
+  "files": [
+    "bin/",
+    "template/",
+    "README.md"
+  ],
+  "scripts": {
+    "smoke": "node bin/pi-gate.js init /tmp/pi-gate-smoke --force && echo SMOKE_OK"
+  },
+  "keywords": [
+    "pi",
+    "coding-agent",
+    "gates",
+    "evidence",
+    "ao-by-codex"
+  ],
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  }
+}

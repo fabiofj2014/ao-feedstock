@@ -1,0 +1,7 @@
+{
+  "$comment": "pi project settings. Extensions in .pi/extensions/ are auto-discovered.",
+  "skills": [
+    "~/.claude/skills",
+    "~/.codex/skills"
+  ]
+}

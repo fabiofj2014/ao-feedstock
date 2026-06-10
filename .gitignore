@@ -1,0 +1,5 @@
+node_modules/
+*.log
+.DS_Store
+# evidence ledger is generated at runtime in target projects, never here
+evidence/ledger.jsonl

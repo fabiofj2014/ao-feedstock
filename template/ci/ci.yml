@@ -1,0 +1,41 @@
+# CI — hard backstop for Trilho A. The local gates are a strong nudge; this is
+# the gate that actually blocks the PR. Adapt commands to your package scripts.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  gate:
+    name: Quality gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install
+        run: npm ci --ignore-scripts
+      - name: Typecheck
+        run: npm run --silent typecheck --if-present
+      - name: Lint
+        run: npm run --silent lint --if-present
+      - name: Test
+        run: npm run --silent test --if-present
+      - name: Upload evidence ledger
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pi-gate-evidence
+          path: evidence/ledger.jsonl
+          if-no-files-found: ignore
