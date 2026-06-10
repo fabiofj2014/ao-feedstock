@@ -51,10 +51,28 @@ pi "implement X"
 
 ## Status
 
-v0. The pi extensions follow the documented `@earendil-works/pi-coding-agent`
-API; verify event field names and `pi.sendMessage` options against your
-installed version before relying on the steer/redact behavior. The CLI and the
-evidence emitter are plain Node and run as-is.
+v0, smoke-tested live against `@earendil-works/pi-coding-agent` v0.79.1 + DeepSeek.
+
+**Verified live:**
+
+- Agent implements a feature end-to-end via `pi -p`.
+- `fast-gate` fires on each write/edit; `full-gate` fires at `agent_end`.
+- Evidence written to `evidence/ledger.jsonl` in ao vocabulary (see
+  `examples/ledger.example.jsonl`), all events sharing one `run/id`.
+- **Red path**: a red suite at finish produces `gate/decision permitida?:false`
+  and the steer message forces the agent to keep working until green
+  (`permitida?:true`) — even in print mode.
+
+**Known limitation — secrets are a speed-bump, not a wall:**
+
+- `secrets.ts` blocks naive secret-leaking bash (literal token / env var), but a
+  determined agent can route around it (e.g. base64-encode the value).
+- `tool_result` redaction does not cover the agent's own assistant message, so a
+  model that narrates a secret in its reply still leaks it.
+- Real secret control = don't expose secrets to the agent + CI secret scanning.
+  Treat `secrets.ts` as defense-in-depth, not a guarantee.
+
+The CLI and the evidence emitter are plain Node and run as-is.
 
 ## Roadmap (not built yet)
 
