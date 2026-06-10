@@ -70,7 +70,8 @@ v0, smoke-tested live against `@earendil-works/pi-coding-agent` v0.79.1 + DeepSe
 - `tool_result` redaction does not cover the agent's own assistant message, so a
   model that narrates a secret in its reply still leaks it.
 - Real secret control = don't expose secrets to the agent + CI secret scanning.
-  Treat `secrets.ts` as defense-in-depth, not a guarantee.
+  The bundled `ci.yml` runs **gitleaks** as that hard gate (blocks the PR if a
+  secret reaches the repo). Treat `secrets.ts` as the in-loop first line only.
 
 The CLI and the evidence emitter are plain Node and run as-is.
 

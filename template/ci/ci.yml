@@ -15,6 +15,20 @@ env:
   NODE_VERSION: "22"
 
 jobs:
+  # The real wall for secrets. secrets.ts (in the agent loop) is only the first
+  # line; this job blocks the PR if a secret reaches the repo.
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   gate:
     name: Quality gate
     runs-on: ubuntu-latest
