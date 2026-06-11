@@ -1,6 +1,6 @@
 {
   "name": "pi-gate",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Trilho A: scaffolds the pi coding agent + quality gates + ao-compatible JSONL evidence into a project. npx pi-gate init.",
   "bin": {
     "pi-gate": "bin/pi-gate.js"
