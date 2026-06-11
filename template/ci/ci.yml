@@ -52,6 +52,9 @@ jobs:
           else
             npm install --ignore-scripts
           fi
+      - name: SCA (npm audit)
+        if: steps.detect.outputs.node == 'true'
+        run: npm audit --audit-level=high
       - name: Typecheck
         if: steps.detect.outputs.node == 'true'
         run: npm run --silent typecheck --if-present
@@ -91,6 +94,22 @@ jobs:
           else
             pip install -e ".[dev]" 2>/dev/null || pip install -e .
           fi
+      - name: SAST (bandit)
+        if: steps.detect.outputs.py == 'true'
+        run: |
+          if uv run python -c 'import bandit' 2>/dev/null; then
+            if grep -q '\[tool\.bandit\]' pyproject.toml; then
+              uv run bandit -q -r . -c pyproject.toml -x ./tests,./.venv
+            else
+              uv run bandit -q -r . -x ./tests,./.venv
+            fi
+          else
+            echo "bandit not in deps — skipping (add to a dev/monitoring group to enable)"
+          fi
+      - name: SCA (pip-audit)
+        if: steps.detect.outputs.py == 'true'
+        run: uvx pip-audit --skip-editable || true
+        # remove '|| true' once the project triages its baseline CVEs
       - name: Gate
         if: steps.detect.outputs.py == 'true'
         run: bash gates/full-gate.sh

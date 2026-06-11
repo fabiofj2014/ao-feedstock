@@ -24,16 +24,35 @@ pybin() {
 
 printf '\n▶ full-gate — suíte obrigatória\n' >&2
 
+# [Secret scan] gitleaks when installed — local first line; CI is the wall
+if command -v gitleaks >/dev/null 2>&1 && [ -d .git ]; then
+  run "gitleaks" gitleaks detect -q --no-banner
+fi
+
 # [Python] detected via pyproject.toml (runs alongside other stacks)
 if [ -f pyproject.toml ]; then
   RUFF="$(pybin ruff)";  MYPY="$(pybin mypy)";  PYTEST="$(pybin pytest)"
   [ -n "$RUFF" ] && run "ruff" "$RUFF" check .
   HAS_PY="$(find . -path ./.venv -prune -o -name '*.py' -print -quit 2>/dev/null)"
   [ -n "$MYPY" ] && [ -n "$HAS_PY" ] && run "mypy" "$MYPY" .
+  # bandit (SAST) — runs when installed; honors [tool.bandit] when present
+  BANDIT="$(pybin bandit)"
+  if [ -n "$BANDIT" ] && [ -n "$HAS_PY" ]; then
+    if grep -q '\[tool\.bandit\]' pyproject.toml 2>/dev/null; then
+      run "bandit" "$BANDIT" -q -r . -c pyproject.toml -x ./tests,./.venv
+    else
+      run "bandit" "$BANDIT" -q -r . -x ./tests,./.venv
+    fi
+  fi
   if [ -n "$PYTEST" ]; then
+    # coverage floor when pytest-cov is installed (GATE_COV_MIN, default 65)
+    COV_ARGS=""
+    if [ -x .venv/bin/python ] && .venv/bin/python -c 'import pytest_cov' 2>/dev/null; then
+      COV_ARGS="--cov --cov-fail-under=${GATE_COV_MIN:-65}"
+    fi
     # exit 5 = no tests collected — not a failure for a fresh project
-    "$PYTEST" -q >/tmp/pi-fullgate.out 2>&1; rc=$?
-    if [ "$rc" -eq 0 ] || [ "$rc" -eq 5 ]; then ok "pytest"
+    "$PYTEST" -q $COV_ARGS >/tmp/pi-fullgate.out 2>&1; rc=$?
+    if [ "$rc" -eq 0 ] || [ "$rc" -eq 5 ]; then ok "pytest${COV_ARGS:+ +cov>=${GATE_COV_MIN:-65}%}"
     else fail "pytest"; tail -n 40 /tmp/pi-fullgate.out | sed 's/^/      /' >&2; fi
   fi
 fi

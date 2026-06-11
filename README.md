@@ -43,16 +43,23 @@ package.json              + scripts gate:fast / gate:full (Node/hybrid projects)
 
 Auto-detected by the gate scripts — only tools that actually exist run:
 
-| Stack  | Detected by      | fast-gate            | full-gate                     |
-|--------|------------------|----------------------|-------------------------------|
-| Node   | `package.json`   | tsc, `lint` script   | tsc, lint, test, coverage     |
-| Python | `pyproject.toml` | ruff                 | ruff, mypy, pytest            |
-| PHP    | `composer.json`  | pint                 | pint, phpstan, pest           |
+| Stack  | Detected by      | fast-gate            | full-gate                                        |
+|--------|------------------|----------------------|--------------------------------------------------|
+| Node   | `package.json`   | tsc, `lint` script   | tsc, lint, test, coverage                        |
+| Python | `pyproject.toml` | ruff                 | ruff, mypy, bandit*, pytest (+cov floor*)        |
+| PHP    | `composer.json`  | pint                 | pint, phpstan, pest                              |
+| any    | `.git` present   | —                    | gitleaks* (secret scan)                          |
 
-Python tools resolve from `.venv/bin/` first, then `PATH`. Hybrid repos
-(e.g. Python backend + Node frontend manifest) run every matching stack.
-Pure Python projects don't get a `package.json` forced on them — the pi
-extension calls the gate scripts via bash directly.
+`*` = only when the tool is installed — gates never force a dependency.
+Coverage floor: install `pytest-cov` and it activates at `GATE_COV_MIN`
+(default 65). Python tools resolve from `.venv/bin/` first, then `PATH`.
+Hybrid repos (e.g. Python backend + Node frontend manifest) run every
+matching stack. Pure Python projects don't get a `package.json` forced on
+them — the pi extension calls the gate scripts via bash directly.
+
+CI adds the heavier security layer per the staged-gates principle (local
+fast, CI blocking, nightly heavy): gitleaks over full history, `npm audit
+--audit-level=high` (Node), bandit + pip-audit (Python).
 
 ## The loop
 
